@@ -27,16 +27,18 @@ from ..phases.phase4_endpoints.wayback import run_historical
 from ..phases.phase4_endpoints.openapi import discover_api_specs
 from ..phases.phase4_endpoints.fuzzer import run_fuzzer
 from ..phases.phase5_output.exporter import export_all
+from ..phases.phase5_output.screenshotter import screenshot_urls
 
 console = Console()
 
 
 class ReconOrchestrator:
-    def __init__(self, domain: str, output_dir: str = ".", skip_fuzz: bool = False, skip_brute: bool = False):
+    def __init__(self, domain: str, output_dir: str = ".", skip_fuzz: bool = False, skip_brute: bool = False, skip_screenshots: bool = False):
         self.domain = domain
         self.output_dir = output_dir
         self.skip_fuzz = skip_fuzz
         self.skip_brute = skip_brute
+        self.skip_screenshots = skip_screenshots
 
         # State
         self.all_subdomains: set[str] = set()
@@ -175,6 +177,16 @@ class ReconOrchestrator:
             output_dir=self.output_dir,
         )
 
+        # Screenshots
+        screenshots_dir = None
+        if not self.skip_screenshots:
+            from pathlib import Path as _Path
+            live_urls = list(self._get_live_base_urls())
+            console.print(f"[bold green]screenshots:[/bold green] capturing {len(live_urls)} live URLs")
+            shots = await screenshot_urls(live_urls, _Path(self.output_dir))
+            if shots:
+                screenshots_dir = str(shots[0].parent)
+
         elapsed = (datetime.utcnow() - start).total_seconds()
         console.print(f"\n[bold green]done in {elapsed:.1f}s[/bold green]")
         console.print(f"  subdomains : {len(self.all_subdomains)}")
@@ -184,6 +196,8 @@ class ReconOrchestrator:
         console.print(f"\n  [cyan]jsonl   :[/cyan] {paths['jsonl']}")
         console.print(f"  [cyan]nuclei  :[/cyan] {paths['nuclei']}")
         console.print(f"  [cyan]report  :[/cyan] {paths['markdown']}")
+        if screenshots_dir:
+            console.print(f"  [cyan]screenshots:[/cyan] {screenshots_dir}")
 
     async def _run_phases_2_and_3(self, subdomains: set[str]):
         """Run DNS resolution and HTTP probing for a set of subdomains."""

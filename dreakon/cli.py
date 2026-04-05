@@ -24,6 +24,7 @@ def scan(
     output: Annotated[str, typer.Option("--output", "-o", help="output directory")] = ".",
     no_fuzz: Annotated[bool, typer.Option("--no-fuzz", help="skip path fuzzing")] = False,
     no_brute: Annotated[bool, typer.Option("--no-brute", help="skip dns brute force")] = False,
+    no_screenshots: Annotated[bool, typer.Option("--no-screenshots", help="skip screenshotting live URLs")] = False,
     db: Annotated[str, typer.Option("--db", help="sqlite db path")] = "dreakon.db",
 ):
     """
@@ -55,6 +56,7 @@ def scan(
         output_dir=output,
         skip_fuzz=no_fuzz,
         skip_brute=no_brute,
+        skip_screenshots=no_screenshots,
     )
     asyncio.run(orchestrator.run())
 
