@@ -1,0 +1,13 @@
+httpx[http2]>=0.27.0
+aiodns>=3.2.0
+dnspython>=2.6.0
+sqlalchemy[asyncio]>=2.0.0
+aiosqlite>=0.20.0
+pydantic-settings>=2.0.0
+typer>=0.12.0
+rich>=13.0.0
+selectolax>=0.3.0
+playwright>=1.44.0
+pybloom-live>=4.0.0
+jinja2>=3.1.0
+python-dotenv>=1.0.0
