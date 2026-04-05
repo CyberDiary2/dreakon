@@ -59,6 +59,16 @@ def scan(
     asyncio.run(orchestrator.run())
 
 
+@app.command()
+def version():
+    """print the current dreakon version."""
+    from importlib.metadata import version as pkg_version
+    try:
+        console.print(pkg_version("dreakon"))
+    except Exception:
+        console.print("unknown")
+
+
 def main():
     app()
 
