@@ -50,29 +50,39 @@ edit `.env` and add api keys. all keys are optional - dreakon degrades gracefull
 ## usage
 
 ```bash
-# full scan
+# full scan, results saved to current directory
 dreakon scan example.com
 
-# save results to a directory
-dreakon scan example.com --output ./results
+# save everything to a folder (recommended)
+dreakon scan example.com --output ./results/example
 
-# skip path fuzzing (faster, less noise)
-dreakon scan example.com --no-fuzz
+# skip fuzzing and brute force for a faster passive-only run
+dreakon scan example.com --output ./results/example --no-fuzz --no-brute
 
-# skip dns brute force (passive only)
-dreakon scan example.com --no-brute
+# skip screenshots
+dreakon scan example.com --output ./results/example --no-screenshots
 
 # custom sqlite db path
 dreakon scan example.com --db ./runs/example.db
-
-# combine flags
-dreakon scan example.com --output ./results --no-fuzz --no-brute
 ```
 
 ## output files
 
-each run produces three files in the output directory:
+each run produces the following in the output directory:
 
-- `<domain>_<timestamp>_endpoints.jsonl` - one endpoint per line, importable into burp suite or nuclei
-- `<domain>_<timestamp>_nuclei_targets.txt` - plain url list: `nuclei -list targets.txt`
-- `<domain>_<timestamp>_report.md` - markdown report with subdomains, endpoints, and findings table
+```
+results/example/
+├── screenshots/                          <- one png per live url, filename is the url
+├── <domain>_<timestamp>_endpoints.jsonl
+├── <domain>_<timestamp>_nuclei_targets.txt
+└── <domain>_<timestamp>_report.md
+```
+
+- `endpoints.jsonl` - one endpoint per line, importable into burp suite or nuclei
+- `nuclei_targets.txt` - plain url list, feed directly into nuclei:
+
+```bash
+nuclei -list results/example/<domain>_*_nuclei_targets.txt
+```
+
+- `report.md` - markdown report with subdomains, endpoints, and findings table
