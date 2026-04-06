@@ -28,17 +28,35 @@ from ..phases.phase4_endpoints.openapi import discover_api_specs
 from ..phases.phase4_endpoints.fuzzer import run_fuzzer
 from ..phases.phase5_output.exporter import export_all
 from ..phases.phase5_output.screenshotter import screenshot_urls
+from ..phases.phase6_takeover.scanner import run_takeover_scan
 
 console = Console()
 
 
 class ReconOrchestrator:
-    def __init__(self, domain: str, output_dir: str = ".", skip_fuzz: bool = False, skip_brute: bool = False, skip_screenshots: bool = False):
+    def __init__(
+        self,
+        domain: str,
+        output_dir: str = ".",
+        skip_fuzz: bool = False,
+        skip_brute: bool = False,
+        skip_screenshots: bool = False,
+        skip_takeover: bool = False,
+        skip_dns: bool = False,
+        skip_http: bool = False,
+        skip_endpoints: bool = False,
+        skip_output: bool = False,
+    ):
         self.domain = domain
         self.output_dir = output_dir
         self.skip_fuzz = skip_fuzz
         self.skip_brute = skip_brute
         self.skip_screenshots = skip_screenshots
+        self.skip_takeover = skip_takeover
+        self.skip_dns = skip_dns
+        self.skip_http = skip_http
+        self.skip_endpoints = skip_endpoints
+        self.skip_output = skip_output
 
         # State
         self.all_subdomains: set[str] = set()
@@ -165,6 +183,21 @@ class ReconOrchestrator:
 
         # Collect findings (takeovers, etc.)
         self._collect_findings()
+
+        # Phase 6: Subdomain takeover scan
+        if not self.skip_takeover:
+            console.rule("[bold red]phase 6: subdomain takeover scan[/bold red]")
+            console.print(f"[dim]checking {len(self.all_subdomains)} subdomains for takeover...[/dim]")
+            takeover_findings = await run_takeover_scan(self.all_subdomains)
+            for f in takeover_findings:
+                self.all_findings.append({
+                    "type": f["type"],
+                    "severity": "high",
+                    "url": f["subdomain"],
+                    "detail": f"{f['service']} - {f.get('evidence') or f.get('ns_record') or f.get('bucket') or ''}",
+                    "evidence": str(f),
+                })
+            console.print(f"[bold red]phase 6 total:[/bold red] {len(takeover_findings)} takeover candidate(s)\n")
 
         # Phase 5: Output
         console.rule("[bold green]phase 5: output[/bold green]")
