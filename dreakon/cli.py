@@ -44,6 +44,7 @@ PHASES = [
     ("4", "endpoint discovery        (crawler, JS, wayback, openapi, fuzzing)"),
     ("5", "output                    (JSONL, nuclei targets, markdown report)"),
     ("6", "subdomain takeover        (dangling CNAMEs, S3, NS takeover - powered by STAB)"),
+    ("7", "cloud footprint mapping   (AWS/Azure/GCP assets from domain - powered by DRACO)"),
 ]
 
 
@@ -87,6 +88,7 @@ def scan(
     no_brute: Annotated[bool, typer.Option("--no-brute", help="skip dns brute force")] = False,
     no_screenshots: Annotated[bool, typer.Option("--no-screenshots", help="skip screenshotting live URLs")] = False,
     no_takeover: Annotated[bool, typer.Option("--no-takeover", help="skip subdomain takeover scan")] = False,
+    no_cloud: Annotated[bool, typer.Option("--no-cloud", help="skip cloud footprint mapping")] = False,
     db: Annotated[str, typer.Option("--db", help="sqlite db path")] = "dreakon.db",
     interactive: Annotated[bool, typer.Option("--interactive", "-I", help="interactively select phases")] = False,
 ):
@@ -125,6 +127,7 @@ def scan(
         skip_brute=no_brute or (selected_phases is not None and "1" not in selected_phases),
         skip_screenshots=no_screenshots or (selected_phases is not None and "5" not in selected_phases),
         skip_takeover=no_takeover or (selected_phases is not None and "6" not in selected_phases),
+        skip_cloud=no_cloud or (selected_phases is not None and "7" not in selected_phases),
         skip_dns=selected_phases is not None and "2" not in selected_phases,
         skip_http=selected_phases is not None and "3" not in selected_phases,
         skip_endpoints=selected_phases is not None and "4" not in selected_phases,

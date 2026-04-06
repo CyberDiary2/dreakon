@@ -29,6 +29,7 @@ from ..phases.phase4_endpoints.fuzzer import run_fuzzer
 from ..phases.phase5_output.exporter import export_all
 from ..phases.phase5_output.screenshotter import screenshot_urls
 from ..phases.phase6_takeover.scanner import run_takeover_scan
+from ..phases.phase7_cloud.scanner import run_cloud_scan
 
 console = Console()
 
@@ -42,6 +43,7 @@ class ReconOrchestrator:
         skip_brute: bool = False,
         skip_screenshots: bool = False,
         skip_takeover: bool = False,
+        skip_cloud: bool = False,
         skip_dns: bool = False,
         skip_http: bool = False,
         skip_endpoints: bool = False,
@@ -53,6 +55,7 @@ class ReconOrchestrator:
         self.skip_brute = skip_brute
         self.skip_screenshots = skip_screenshots
         self.skip_takeover = skip_takeover
+        self.skip_cloud = skip_cloud
         self.skip_dns = skip_dns
         self.skip_http = skip_http
         self.skip_endpoints = skip_endpoints
@@ -198,6 +201,24 @@ class ReconOrchestrator:
                     "evidence": str(f),
                 })
             console.print(f"[bold red]phase 6 total:[/bold red] {len(takeover_findings)} takeover candidate(s)\n")
+
+        # Phase 7: Cloud footprint scan
+        if not self.skip_cloud:
+            console.rule("[bold blue]phase 7: cloud footprint mapping[/bold blue]")
+            console.print(f"[dim]mapping AWS/Azure/GCP assets for {self.domain}...[/dim]")
+            try:
+                cloud_findings = await run_cloud_scan(self.domain)
+                for f in cloud_findings:
+                    self.all_findings.append({
+                        "type": f["type"],
+                        "severity": f.get("severity", "info"),
+                        "url": f.get("url") or f.get("hostname") or f.get("name", ""),
+                        "detail": f.get("detail", ""),
+                        "evidence": str(f),
+                    })
+                console.print(f"[bold blue]phase 7 total:[/bold blue] {len(cloud_findings)} cloud asset(s) found\n")
+            except ImportError:
+                console.print("[yellow]phase 7 skipped - draco not installed (pip install draco)[/yellow]\n")
 
         # Phase 5: Output
         console.rule("[bold green]phase 5: output[/bold green]")
